@@ -1,4 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
+import createOrderHandler from "../../netlify/functions/create-order";
 import { processOrder } from "../../netlify/functions/src/orders";
 import { createInMemoryDb } from "./inMemoryDb";
 import { createFakeEmail } from "./fakeEmail";
@@ -41,6 +42,23 @@ const validItems = [
 const baseBody = () => ({
   customer: goodCustomer,
   items: validItems,
+});
+
+describe("create-order endpoint methods", () => {
+  it("rejects methods other than POST", async () => {
+    const response = await createOrderHandler(
+      new Request("http://localhost/.netlify/functions/create-order", {
+        method: "GET",
+      }),
+      {} as never,
+    );
+
+    expect(response.status).toBe(405);
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: "METHOD_NOT_ALLOWED", message: "Only POST is allowed." },
+    });
+  });
 });
 
 describe("processOrder — happy path", () => {

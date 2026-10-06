@@ -9,6 +9,9 @@ import { checkRateLimit } from "./src/rateLimit";
 import { processOrder } from "./src/orders";
 import { createResendClient } from "./src/email";
 import { createSupabaseDatabase } from "./src/dbSupabase";
+//added this part
+import type { Context } from "@netlify/functions";
+
 
 /**
  * POST /.netlify/functions/create-order
@@ -20,13 +23,13 @@ import { createSupabaseDatabase } from "./src/dbSupabase";
  * Idempotent on `clientOrderId`. Rate-limited per IP.
  */
 
-interface NetlifyLikeEvent {
-  httpMethod: string;
-  headers: Record<string, string | undefined>;
-  body: string | null;
-}
+//interface NetlifyLikeEvent {
+ // httpMethod: string;
+//  headers: Record<string, string | undefined>;
+  //body: string | null;
+//}
 
-type NetlifyLikeContext = unknown;
+//type NetlifyLikeContext = unknown;
 
 function getEnv(name: string, fallback?: string): string {
   const v = process.env[name];
@@ -37,25 +40,34 @@ function getEnv(name: string, fallback?: string): string {
   return v;
 }
 
-function clientIp(headers: Record<string, string | undefined>): string {
+/*function clientIp(headers: Record<string, string | undefined>): string {
   return (
     headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
     headers["x-real-ip"] ||
     headers["client-ip"] ||
     "unknown"
   );
-}
-
-export default async function handler(
-  event: NetlifyLikeEvent,
-  _ctx: NetlifyLikeContext,
-): Promise<Response> {
+}*/
+//export default async function handler(
+  //event: NetlifyLikeEvent,
+  //_ctx: NetlifyLikeContext,
+//): Promise<Response> {
   // CORS preflight.
-  if (event.httpMethod === "OPTIONS") {
-    return new Response("", { status: 204, headers: CORS_HEADERS });
-  }
-
-  if (event.httpMethod !== "POST") {
+  //if (event.httpMethod === "OPTIONS") {
+   // return new Response("", { status: 204, headers: CORS_HEADERS });
+  //}
+  export default async function handler(
+  request: Request,
+  _ctx: Context,
+): Promise<Response> {
+//added this part
+ if (request.method === "OPTIONS") {
+  return new Response("", {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
+ if (request.method !== "POST") {
     return jsonResponse(
       405,
       errorBody("METHOD_NOT_ALLOWED", "Only POST is allowed."),
@@ -64,7 +76,12 @@ export default async function handler(
   }
 
   // Rate limit per IP.
-  const ip = clientIp(event.headers);
+  //const ip = clientIp(event.headers);
+  const ip =
+  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  request.headers.get("x-real-ip") ||
+  request.headers.get("client-ip") ||
+  "unknown";
   const rl = checkRateLimit(`order:${ip}`);
   if (!rl.allowed) {
     return jsonResponse(
@@ -78,7 +95,8 @@ export default async function handler(
   }
 
   // Body size limit.
-  const bodyStr = event.body ?? "";
+  //const bodyStr = event.body ?? "";
+  const bodyStr = await request.text();
   if (bodyStr.length > MAX_BODY_BYTES) {
     return jsonResponse(
       413,

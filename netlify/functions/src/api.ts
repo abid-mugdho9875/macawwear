@@ -41,7 +41,7 @@ export function errorBody(
 export const CORS_HEADERS: Record<string, string> = {
   // Same-origin in production. These exist for local dev with separate frontends.
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
