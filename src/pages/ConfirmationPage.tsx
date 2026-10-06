@@ -87,10 +87,9 @@ export function ConfirmationPage() {
           >
             <p className="font-semibold">Your order was received.</p>
             <p className="mt-1">
-              We couldn't send a confirmation email just now, but your order
-              {state.emailWarning ? ` (${state.emailWarning})` : ""} is safely
-              recorded. We'll follow up shortly.
-            </p>
+  Your order  is now under processing. Our team will
+  contact you shortly to confirm your order and delivery details. 
+  </p>
           </div>
         )}
 
